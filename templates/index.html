@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+    <head>
+        <meta charset="UTF-8">
+        <title>DIP483</title>
+    </head>
+    <body>
+        <h3>Here is the Homework for intelligent KB tool</h3>
+        <h3>Enter Name :</h3>
+        <input list="name-list" id="name-choice" type="text"/></br>
+        <datalist id="name-list"></datalist>
+        <button id="btn">Send to database</button><br>
+        <h3>Database :</h3>
+        <table id="results" border = 1></table><br>
+        <h4>By Antoine Dubois</h4>
+        <script>
+            //Consts
+            const inputText = document.getElementById("name-choice")
+            const inputList = document.getElementById("name-list")
+            const btn = document.getElementById("btn")
+            const table = document.getElementById("results")
+            let datalistOptions = []
+
+            //Build the autocomplete list
+            const getDatalist = (options) => {
+                inputList.innerHTML = ""
+                for (let option of options) {
+                    inputList.innerHTML += `<option value="${option}">${option}</option>\n`;
+                }
+                datalistOptions = options;
+            };
+
+            //Listen when the name input change
+            inputText.addEventListener("input", async() => {
+                if (datalistOptions.includes(inputText.value)) {
+                    return;
+                }
+                const proceeded = await fetch(
+                    "get?" + new URLSearchParams({ get: inputText.value })
+                );
+                const selection = await proceeded.json();
+                getDatalist(selection);
+                
+            });
+
+            //Build the table from the database
+            const getTable = (rows) => {
+                table.innerHTML = `<thead><td>Name</td><td>Pk</td></thead>`;
+                for (let row of rows) {
+                    console.log(row)
+                    table.innerHTML += `<tr><td>${row[0]}</td><td>${row[1]}</td></tr>\n`;
+                }
+            };
+
+            //Listen on load to display the database
+            window.addEventListener('load', async () => {
+                const proceeded = await fetch(
+                    "display?"
+                );
+                const selection = await proceeded.json();
+                getTable(selection);
+            });
+
+            //Listen the btn to make the choice and display the database
+            btn.addEventListener("click", async () => {
+                await fetch('send', {
+                    method: "POST",
+                    body: JSON.stringify({
+                        'name-choice': inputText.value,
+                        'names-selection': datalistOptions
+                    }),
+                }).then(async (response) => {
+                    inputText.value = "";
+                    getDatalist([]);
+                    const proceeded = await fetch(
+                        "display?"
+                    );
+                    const selection = await proceeded.json();
+                    getTable(selection);
+                });
+            });       
+        </script>
+    </body>
+</html>
