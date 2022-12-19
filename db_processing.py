@@ -3,6 +3,8 @@ import sqlite3 as sql
 #Const :
 based_pk = 0.5
 min_pk = 0.2
+increase_coefficients = 0.1
+decrease_coefficients = 0.2
 
 #Database : Insert a name into the database
 def insertNameIntoDb(name):
@@ -39,18 +41,18 @@ def updateDatabase(selected, selection):
 
         if len(result) != 0 :
             selection.remove(selected)
-            pk_increased = increasePk(result[0][1], based_pk)
-            cur.execute("UPDATE data SET pk = '{updatedPk}' WHERE name = '{selected}'".format(updatedPk = pk_increased, selected = selected))
+            pkIncreased = increasePk(result[0][1], increase_coefficients)
+            cur.execute("UPDATE data SET pk = '{updatedPk}' WHERE name = '{selected}'".format(updatedPk = pkIncreased, selected = selected))
         else :
             insertNameIntoDb(selected)
 
         for name in selection:
             cur.execute("SELECT * FROM data WHERE name = '{named}'".format(named = name))
             result = cur.fetchall()
-            pk_decreased = decreasePk(result[0][1], based_pk)
-            cur.execute("UPDATE data SET pk = '{updatedPk}' WHERE name = '{named}'".format(updatedPk = pk_decreased, named = name))
+            pkDecreased = decreasePk(result[0][1], decrease_coefficients)
+            cur.execute("UPDATE data SET pk = '{updatedPk}' WHERE name = '{named}'".format(updatedPk = pkDecreased, named = name))
 
-        cur.execute("DELETE FROM data WHERE pk < {min_pk}".format(min_pk = min_pk))
+        cur.execute("DELETE FROM data WHERE pk < {minPk}".format(minPk = min_pk))
         con.commit()
 
 #Database : Get the entire table from the database
@@ -66,9 +68,9 @@ def getFullTable():
     return smoothResults
 
 #Func : Increase the Pk
-def increasePk(pk_previous, pk_new):
-    return pk_previous + (1-pk_previous) * pk_new
+def increasePk(pkPrevious, pkNew):
+    return pkPrevious + (1-pkPrevious) * pkNew
 
 #Func : Decrease the Pk
-def decreasePk(pk_previous, pk_new):
-    return pk_previous - (1-pk_previous) * pk_new
+def decreasePk(pkPrevious, pkNew):
+    return pkPrevious - (1-pkPrevious) * pkNew
